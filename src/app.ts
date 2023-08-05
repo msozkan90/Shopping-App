@@ -1,6 +1,9 @@
 import express, { Request, Response } from 'express';
 import bodyParser from 'body-parser';
 import productRouter from './routes/product';
+import customerRouter from './routes/customer';
+import orderRouter from './routes/order';
+import userRouter from './routes/user';
 import dotenv from 'dotenv';
 import { createTableIfNotExists } from './db/createtable'; // createTableIfNotExists fonksiyonunu import edin
 
@@ -25,6 +28,9 @@ app.use(bodyParser.json());
 
 // Rotalar
 app.use(productRouter);
+app.use(customerRouter);
+app.use(orderRouter);
+app.use(userRouter);
 
 // Sunucuyu başlatma
 app.listen(process.env.PORT, () => {
