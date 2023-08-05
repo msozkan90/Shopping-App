@@ -24,7 +24,8 @@ COPY .env ./
 COPY --from=build /app/dist ./dist
 
 # Express ve diğer bağımlılıkları ekleyelim
-RUN npm install express body-parser pg dotenv ts-node @types/pg @types/node @types/express @types/body-parser
+RUN npm install express body-parser pg dotenv ts-node @types/pg @types/node @types/express @types/body-parser knex pg
+
 
 EXPOSE 3000
 CMD ["npm", "start"]

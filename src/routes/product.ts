@@ -14,47 +14,44 @@ router.get('/products', async (req: Request, res: Response) => {
         res.status(500).json({ error: 'Internal Server Error' });
     }
 })
-// // Ürün ekleme
-// router.post('/products', async (req: Request, res: Response) => {
-//   try {
-//     const { name, price, description } = req.body;
-//     const newProduct: Product = await pool.query(
-//       'INSERT INTO products (name, price, description) VALUES ($1, $2, $3) RETURNING *',
-//       [name, price, description]
-//     );
+// Ürün ekleme
+router.post('/product', async (req: Request, res: Response) => {
+  try {
+    const { name, price, description } = req.body;
+    const newProduct = await pool.query(
+      'INSERT INTO products (name, price, description) VALUES ($1, $2, $3) RETURNING *',
+      [name, price, description]
+    );
 
-//     res.json(newProduct.rows[0]);
-//   } catch (err) {
-//     res.status(500).json({ error: 'Internal Server Error' });
-//   }
-// });
+    res.json(newProduct.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
 
-// // Ürün güncelleme
-// router.put('/products/:id', async (req: Request, res: Response) => {
-//   try {
-//     const { id } = req.params;
-//     const { name, price, description } = req.body;
-//     const updatedProduct: Product = await pool.query(
-//       'UPDATE products SET name = $1, price = $2, description = $3 WHERE id = $4 RETURNING *',
-//       [name, price, description, id]
-//     );
 
-//     res.json(updatedProduct.rows[0]);
-//   } catch (err) {
-//     res.status(500).json({ error: 'Internal Server Error' });
-//   }
-// });
 
-// // Ürün silme
-// router.delete('/products/:id', async (req: Request, res: Response) => {
-//   try {
-//     const { id } = req.params;
-//     const deletedProduct: Product = await pool.query('DELETE FROM products WHERE id = $1 RETURNING *', [id]);
+router.get('/users', async (req: Request, res: Response) => {
+    try {
+      const { rows } = await pool.query('SELECT * FROM users;');
+      res.json(rows);
+    } catch (error) {
+      res.status(500).json({ error: 'Error retrieving users from the database.' });
+    }
+  });
 
-//     res.json(deletedProduct.rows[0]);
-//   } catch (err) {
-//     res.status(500).json({ error: 'Internal Server Error' });
-//   }
-// });
+  router.post('/users', async (req: Request, res: Response) => {
+    const { username, email } = req.body;
 
+    if (!username || !email) {
+      return res.status(400).json({ error: 'Both username and email are required.' });
+    }
+
+    try {
+      const { rows } = await pool.query('INSERT INTO users (username, email) VALUES ($1, $2) RETURNING *;', [username, email]);
+      res.status(201).json(rows[0]);
+    } catch (error) {
+      res.status(500).json({ error: 'Error inserting user into the database.' });
+    }
+  });
 export default router;

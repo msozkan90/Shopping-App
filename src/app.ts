@@ -6,8 +6,8 @@ import { createTableIfNotExists } from './db/createtable'; // createTableIfNotEx
 
 dotenv.config(); // .env dosyasını yükle
 const app = express();
-console.log(process.env.PORT);
-console.log(process.env.POSTGRES_PASSWORD);
+
+
 // Uygulama başlamadan önce createTableIfNotExists fonksiyonunu çağır
 // Call createTableIfNotExists before starting the server to create the table if it doesn't exist
 createTableIfNotExists()
