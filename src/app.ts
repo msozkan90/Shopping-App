@@ -1,24 +1,19 @@
-import express, { Request, Response } from 'express';
+import express from 'express';
 import bodyParser from 'body-parser';
 import productRouter from './routes/product';
 import orderRouter from './routes/order';
 import customerRouter from './routes/customer';
 import dotenv from 'dotenv';
-import { createTableIfNotExists } from './db/createtable'; // createTableIfNotExists fonksiyonunu import edin
-
+import {AppDataSource} from './db/dataSource';
 dotenv.config(); // .env dosyasını yükle
 const app = express();
 
-
-// Uygulama başlamadan önce createTableIfNotExists fonksiyonunu çağır
-// Call createTableIfNotExists before starting the server to create the table if it doesn't exist
-createTableIfNotExists()
-  .then(() => {
-    console.log('Table check completed.');
-  })
-  .catch((error) => {
-    console.error('Error checking table:', error);
-  });
+AppDataSource.initialize()
+    .then(() => {
+        console.log('Data Source has been initialized!');
+        // here you can start to work with your database
+    })
+    .catch((error) => console.log(error))
 
 
 // JSON verilerini işlemek için body-parser kullanalım

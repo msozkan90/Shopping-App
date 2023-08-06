@@ -24,7 +24,7 @@ COPY .env ./
 COPY --from=build /app/dist ./dist
 
 # Express ve diğer bağımlılıkları ekleyelim
-RUN npm install express body-parser pg dotenv ts-node bcrypt jsonwebtoken express-validator @types/pg @types/node @types/express @types/body-parser @types/bcrypt  @types/jsonwebtoken
+RUN npm install express body-parser pg dotenv ts-node bcrypt jsonwebtoken express-validator typeorm @types/pg @types/node @types/express @types/body-parser @types/bcrypt  @types/jsonwebtoken
 
 
 EXPOSE 3000

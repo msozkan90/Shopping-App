@@ -1,16 +1,19 @@
 import express, { Request, Response } from 'express';
-import pool from '../db/db';
 import {authMiddleware} from '../middlewares/authenticationMiddleware';
 import {permissionMiddleware} from '../middlewares/permissionMiddleware';
 import {productCreateValidation, productUpdateValidation, validateData} from '../validations/productValidation';
+import { Product } from '../entities/Product';
+import { AppDataSource } from '../db/dataSource';
+
 
 const router = express.Router();
 
 router.get('/products', authMiddleware, async (req: Request, res: Response) => {
 
     try {
-        const products = await pool.query('SELECT * FROM products');
-        res.json(products.rows);
+        const productRepository = AppDataSource.getRepository(Product)
+        const products = await productRepository.find();
+        res.json(products);
     } catch (err) {
       console.log(err);
         res.status(500).json({ error: 'Internal Server Error' });
@@ -20,55 +23,49 @@ router.get('/products', authMiddleware, async (req: Request, res: Response) => {
 // Ürün ekleme
 router.post('/product', productCreateValidation, validateData, permissionMiddleware , async (req: Request, res: Response) => {
   try {
-
+    const product_object = new Product()
     const { name, price, description } = req.body;
-    const newProduct = await pool.query(
-      'INSERT INTO products (name, price, description) VALUES ($1, $2, $3) RETURNING *',
-      [name, price, description]
-    );
-
-    res.json(newProduct.rows[0]);
+    product_object.name = name
+    product_object.price = price
+    product_object.description = description
+    const product = await AppDataSource.manager.save(product_object)
+    res.json(product);
   } catch (err) {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
-
 router.patch('/product/:id', productUpdateValidation, validateData, permissionMiddleware, async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = Number(req.params.id); // Convert the id to a number
     const { name, price, description } = req.body;
-    const updateFields: any = {}; // Boş bir nesne oluşturuyoruz, güncellenecek alanları buraya ekleyeceğiz.
+    const productRepository = AppDataSource.getRepository(Product)
 
-    if (name) {
-      updateFields.name = name;
-    }
+    // Find the product by its primary key (id)
+    const productToUpdate = await productRepository.findOne({where: {id: id}});
 
-    if (price) {
-      updateFields.price = price;
-    }
-
-    if (description) {
-      updateFields.description = description;
-    }
-
-    if (Object.keys(updateFields).length === 0) {
-      // Eğer hiçbir alan gelmemişse, hata döndürüyoruz.
-      return res.status(400).json({ error: 'No fields to update' });
-    }
-
-    const updateProduct = await pool.query(
-      'UPDATE products SET name = COALESCE($1, name), price = COALESCE($2, price), description = COALESCE($3, description) WHERE id = $4 RETURNING *',
-      [updateFields.name, updateFields.price, updateFields.description, id]
-    );
-
-    if (updateProduct.rows.length === 0) {
-      // Güncellenen ürün bulunamadıysa, hata döndürüyoruz.
+    if (!productToUpdate) {
+      // If productToUpdate is null, it means the product with the specified id doesn't exist
       return res.status(404).json({ error: 'Product not found' });
     }
 
-    res.json(updateProduct.rows[0]); // Güncellenen ürünü döndürüyoruz.
+    if (name) {
+      productToUpdate.name = name;
+    }
+
+    if (price) {
+      productToUpdate.price = price;
+    }
+
+    if (description) {
+      productToUpdate.description = description;
+    }
+
+    const updated_product = await productRepository.save(productToUpdate);
+
+    res.json(updated_product); // Güncellenen ürünü döndürüyoruz.
   } catch (err) {
+    console.error('Error while updating product:', err);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
@@ -76,17 +73,19 @@ router.patch('/product/:id', productUpdateValidation, validateData, permissionMi
 
 router.delete('/product/:id', permissionMiddleware, async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = Number(req.params.id); // Convert the id to a number
+    const productRepository = AppDataSource.getRepository(Product)
+    const productToDelete = await productRepository.findOne({where: {id: id}});
 
-    // Ürünü veritabanından silmeden önce, ürünü bulup döndürebiliriz.
-    const deletedProduct = await pool.query('DELETE FROM products WHERE id = $1 RETURNING *', [id]);
-
-    if (deletedProduct.rows.length === 0) {
+    if (!productToDelete) {
       // Silinen ürün bulunamadıysa, hata döndürüyoruz.
       return res.status(404).json({ error: 'Product not found' });
     }
 
+    await productRepository.remove(productToDelete)
+
     res.json({ message: 'Product deleted successfully' });
+
   } catch (err) {
     res.status(500).json({ error: 'Internal Server Error' });
   }
