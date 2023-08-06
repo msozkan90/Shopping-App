@@ -1,6 +1,6 @@
-# Altyapı oluşturma
 FROM node:14 AS build
 
+# Set the working directory inside the container
 WORKDIR /app
 
 COPY package*.json ./
@@ -9,21 +9,19 @@ RUN npm install
 COPY . .
 RUN npm run build
 
-# Uygulama çalıştırma
+
 FROM node:14
 
 WORKDIR /app
 
+# Install only production dependencies
 COPY package*.json ./
 RUN npm install --only=production
 
-# .env dosyasını kopyala
-COPY .env ./
 
-# Derleme işleminden gerekli dosyaları kopyala
+COPY .env ./
 COPY --from=build /app/dist ./dist
 
-# Express ve diğer bağımlılıkları ekleyelim
 RUN npm install express body-parser pg dotenv ts-node bcrypt jsonwebtoken express-validator typeorm @types/pg @types/node @types/express @types/body-parser @types/bcrypt  @types/jsonwebtoken
 
 
