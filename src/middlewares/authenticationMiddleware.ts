@@ -7,6 +7,7 @@ interface AuthPayload {
   id: string;
   email: string;
   status: string;
+  is_admin: boolean;
 }
 
 // Genişletilmiş bir Request türü tanımlıyoruz, böylece 'user' alanını ekleyebiliriz.
