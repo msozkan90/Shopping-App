@@ -45,12 +45,10 @@ router.post(
       // Create a new object without the password property
       const userWithoutPassword = { ...user, password: undefined };
 
-      res
-        .status(201)
-        .json({
-          message: "Registration successful",
-          user: userWithoutPassword,
-        });
+      res.status(201).json({
+        message: "Registration successful",
+        user: userWithoutPassword,
+      });
     } catch (err) {
       console.error("Error while registering:", err);
       res.status(500).json({ message: "Registration failed" });

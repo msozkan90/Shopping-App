@@ -16,22 +16,25 @@ const productRepository = AppDataSource.getRepository(Product);
  */
 router.get("/orders", authMiddleware, async (req: Request, res: Response) => {
   const customerId = Number(req.user?.id);
-
+  console.log(customerId);
   try {
     // Fetch orders for the authenticated customer by customer_id
-    const orders = await orderRepository.find({
-      where: { customer_id: customerId },
-    });
-
+    const orders = await orderRepository.findBy(
+      { customer_id: customerId },
+    );
+    console.log(orders);
+    console.log("--------------------------------");
+    console.log("--------------------------------");
+    console.log("--------------------------------");
     // Fetch details of products for each order and calculate the total price
     const orderDetails = await Promise.all(
       orders.map(async (order) => {
         const productIds = order.products_id;
 
         // Fetch products by their IDs
-        const products = await productRepository.find({
-          where: productIds.map((id) => ({ id })),
-        });
+        const products = await productRepository.findBy(
+           productIds.map((id) => ({ id }))
+        );
 
         // Calculate the total price
         const total_price = products.reduce(
@@ -47,16 +50,16 @@ router.get("/orders", authMiddleware, async (req: Request, res: Response) => {
           total_price,
         };
         return orderDetail;
+
       })
     );
 
-    res.json(orderDetails);
+    res.status(200).json(orderDetails);
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        error: "Error fetching orders and product details from the database.",
-      });
+    console.error("Error fetching orders and product details from the database:", error);
+    res.status(500).json({
+      error: "Error fetching orders and product details from the database.",
+    });
   }
 });
 
@@ -156,13 +159,11 @@ router.get(
         return res.status(404).json({ error: "Order not found" });
       }
 
-      res.json(orderDetails);
+      res.status(200).json(orderDetails);
     } catch (error) {
-      res
-        .status(500)
-        .json({
-          error: "Error fetching orders and product details from the database.",
-        });
+      res.status(500).json({
+        error: "Error fetching orders and product details from the database.",
+      });
     }
   }
 );
@@ -200,7 +201,7 @@ router.patch(
         return res.status(404).json({ error: "Order not found" });
       }
 
-      res.json(updatedOrder.raw);
+      res.status(200).json(updatedOrder.raw);
     } catch (error) {
       res.status(500).json({ error: "Error updating order in the database." });
     }
@@ -236,7 +237,7 @@ router.delete(
         return res.status(404).json({ error: "Order not found" });
       }
 
-      res.json({ message: "Order deleted successfully" });
+      res.status(200).json({ message: "Order deleted successfully" });
     } catch (error) {
       res
         .status(500)

@@ -20,7 +20,7 @@ router.get("/products", authMiddleware, async (req: Request, res: Response) => {
   try {
     const productRepository = AppDataSource.getRepository(Product);
     const products = await productRepository.find();
-    res.json(products);
+    res.status(200).json(products);
   } catch (err) {
     console.log(err);
     res.status(500).json({ error: "Internal Server Error" });
@@ -49,7 +49,7 @@ router.post(
       const productRepository = AppDataSource.getRepository(Product);
       const product = await productRepository.save(product_object);
 
-      res.json(product);
+      res.status(201).json(product);
     } catch (err) {
       res.status(500).json({ error: "Internal Server Error" });
     }
@@ -99,7 +99,7 @@ router.patch(
 
       const updated_product = await productRepository.save(productToUpdate);
 
-      res.json(updated_product); // Return the updated product
+      res.status(200).json(updated_product); // Return the updated product
     } catch (err) {
       console.error("Error while updating product:", err);
       res.status(500).json({ error: "Internal Server Error" });
@@ -130,7 +130,7 @@ router.delete(
 
       await productRepository.remove(productToDelete);
 
-      res.json({ message: "Product deleted successfully" });
+      res.status(200).json({ message: "Product deleted successfully" });
     } catch (err) {
       res.status(500).json({ error: "Internal Server Error" });
     }
