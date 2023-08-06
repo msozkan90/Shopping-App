@@ -3,13 +3,13 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import pool from '../db/db';
 import {authMiddleware} from '../middlewares/authenticationMiddleware';
-import {registerValidation, loginValidation} from '../validations/customerValidation';
+import {registerValidation, loginValidation, validateData} from '../validations/customerValidation';
 
 const router = express.Router();
 
 
 // Kayıt olma (Register) endpoint'i
-router.post('/register', registerValidation, async (req: Request, res: Response) => {
+router.post('/register', registerValidation, validateData, async (req: Request, res: Response) => {
   const { email, name, surname, password, is_admin } = req.body;
 
   try {
@@ -35,7 +35,7 @@ router.post('/register', registerValidation, async (req: Request, res: Response)
   }
 });
 
-router.post('/login', loginValidation, async (req: Request, res: Response) => {
+router.post('/login', loginValidation, validateData, async (req: Request, res: Response) => {
   const { email, password } = req.body;
 
   try {

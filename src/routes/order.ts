@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import pool from '../db/db';
 import {authMiddleware} from '../middlewares/authenticationMiddleware';
+import {orderValidation, validateData} from '../validations/orderValidation';
 
 const router = express.Router();
 
@@ -39,8 +40,7 @@ router.get('/orders', authMiddleware, async (req: Request, res: Response) => {
 })
 
 
-
-router.post('/order', authMiddleware, async (req: Request, res: Response) => {
+router.post('/order', orderValidation, validateData,  authMiddleware, async (req: Request, res: Response) => {
     const { products_id } = req.body;
     const customer_id = req.user?.id;
 
@@ -106,7 +106,7 @@ router.get('/order/:id', authMiddleware, async (req: Request, res: Response) => 
 });
 
 
-router.patch('/order/:id', authMiddleware, async (req: Request, res: Response) => {
+router.patch('/order/:id', orderValidation, validateData, authMiddleware, async (req: Request, res: Response) => {
     const { id } = req.params;
     const { products_id } = req.body;
     try {

@@ -1,21 +1,34 @@
 import { Request, Response, NextFunction } from 'express';
 import { body, validationResult, ValidationChain } from 'express-validator';
 
-const registerValidation: ValidationChain[] = [
-  body('email')
-    .notEmpty().withMessage('Email is required')
-    .isEmail().withMessage('Please provide a valid email address'),
+const productCreateValidation: ValidationChain[] = [
   body('name')
-    .notEmpty().withMessage('Name is required'),
-  body('surname')
-    .notEmpty().withMessage('Surname is required'),
-  body('password')
-    .notEmpty().withMessage('Password is required')
-    .isLength({ min: 6 }).withMessage('Password must be at least 6 characters long'),
-  // Diğer gerekli kontrolleri buraya ekleyebilirsiniz...
+    .notEmpty().withMessage('Name is required')
+    .isString().withMessage('Please provide string value'),
+
+  body('description')
+    .notEmpty().withMessage('Description is required')
+    .isString().withMessage('Please provide string value'),
+  body('price')
+    .notEmpty().withMessage('Price is required')
+    .isNumeric().withMessage('Please provide numeric value'),
+
 ];
 
-const validateRegistrationData = (req: Request, res: Response, next: NextFunction) => {
+
+const productUpdateValidation: ValidationChain[] = [
+    body('name')
+        .optional({ nullable: true })
+        .isString().withMessage('Please provide string value'),
+    body('description')
+        .optional({ nullable: true })
+        .isString().withMessage('Please provide string value'),
+    body('price')
+        .isNumeric().withMessage('Please provide numeric value')
+        .optional({ nullable: true }),
+  ];
+
+const validateData  = (req: Request, res: Response, next: NextFunction) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
@@ -23,4 +36,4 @@ const validateRegistrationData = (req: Request, res: Response, next: NextFunctio
   next();
 };
 
-export { registerValidation, validateRegistrationData };
+export { productCreateValidation, productUpdateValidation, validateData  };

@@ -2,6 +2,7 @@ import express, { Request, Response } from 'express';
 import pool from '../db/db';
 import {authMiddleware} from '../middlewares/authenticationMiddleware';
 import {permissionMiddleware} from '../middlewares/permissionMiddleware';
+import {productCreateValidation, productUpdateValidation, validateData} from '../validations/productValidation';
 
 const router = express.Router();
 
@@ -17,7 +18,7 @@ router.get('/products', authMiddleware, async (req: Request, res: Response) => {
 })
 
 // Ürün ekleme
-router.post('/product', permissionMiddleware, async (req: Request, res: Response) => {
+router.post('/product', productCreateValidation, validateData, permissionMiddleware , async (req: Request, res: Response) => {
   try {
 
     const { name, price, description } = req.body;
@@ -33,7 +34,7 @@ router.post('/product', permissionMiddleware, async (req: Request, res: Response
 });
 
 
-router.patch('/product/:id', permissionMiddleware, async (req: Request, res: Response) => {
+router.patch('/product/:id', productUpdateValidation, validateData, permissionMiddleware, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { name, price, description } = req.body;
