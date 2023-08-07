@@ -1,11 +1,16 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
+import { User } from "../entities/User";
+import { AppDataSource } from "../db/dataSource";
 
+const userRepository = AppDataSource.getRepository(User);
 // Interface for the authentication payload
 interface AuthPayload {
-  id: string;
+  id: number;
   email: string;
-  status: string;
+  name: string;
+  surname: string;
+  password: string;
   is_admin: boolean;
 }
 
@@ -30,7 +35,7 @@ declare global {
  * @param res - Express Response object
  * @param next - Express NextFunction to proceed to the next middleware
  */
-export const permissionMiddleware = (
+export const permissionMiddleware = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -58,8 +63,17 @@ export const permissionMiddleware = (
       process.env.JWT_SECRET || "your_jwt_secret"
     ) as AuthPayload;
 
-    // Attach the decoded user information to the 'user' field in the Request object
-    req.user = decodedToken;
+    // Find the user by their ID (assuming the user repository has a method to do this)
+    const user = await userRepository.findOneBy({
+      id: Number(decodedToken.id),
+    });
+
+    if (!user) {
+      return res.status(401).json({ message: "User not found" });
+    }
+
+    // Attach the user object to the 'user' field in the Request object
+    req.user = user;
 
     // Check if the user is an admin
     if (req.user.is_admin) {

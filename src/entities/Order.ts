@@ -3,8 +3,6 @@ import {
   PrimaryGeneratedColumn,
   Column,
   ManyToOne,
-  ManyToMany,
-  JoinTable,
   CreateDateColumn,
   UpdateDateColumn,
 } from "typeorm";
@@ -27,8 +25,8 @@ export class Order {
    * Customer ID
    * Many-to-One relationship with the User entity to represent the customer of this order.
    */
-  @ManyToOne(() => User, (user) => user.id)
-  customer_id!: number;
+  @ManyToOne(() => User, (user) => user.name)
+  customer_id!: User;
 
   /**
    * Products ID

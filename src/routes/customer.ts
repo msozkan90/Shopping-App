@@ -32,6 +32,10 @@ router.post(
       // Hash the password
       const saltRounds = 10;
       const hashedPassword = await bcrypt.hash(password, saltRounds);
+      const user_exists = await userRepository.findOneBy({ email: email });
+      if (user_exists) {
+        return res.status(400).json({ message: "This email already taken" });
+      }
 
       user_object.email = email;
       user_object.name = name;

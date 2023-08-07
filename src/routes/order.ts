@@ -2,6 +2,7 @@ import express, { Request, Response } from "express";
 import { authMiddleware } from "../middlewares/authenticationMiddleware";
 import { orderValidation, validateData } from "../validations/orderValidation";
 import { Order } from "../entities/Order";
+import { User } from "../entities/User";
 import { Product } from "../entities/Product";
 import { AppDataSource } from "../db/dataSource";
 
@@ -15,17 +16,11 @@ const productRepository = AppDataSource.getRepository(Product);
  * Uses 'authMiddleware' to check the JWT token and retrieve the customer ID.
  */
 router.get("/orders", authMiddleware, async (req: Request, res: Response) => {
-  const customerId = Number(req.user?.id);
-  console.log(customerId);
+  const customer = req.user as User | undefined;
+
   try {
     // Fetch orders for the authenticated customer by customer_id
-    const orders = await orderRepository.findBy(
-      { customer_id: customerId },
-    );
-    console.log(orders);
-    console.log("--------------------------------");
-    console.log("--------------------------------");
-    console.log("--------------------------------");
+    const orders = await orderRepository.findBy({ customer_id: customer });
     // Fetch details of products for each order and calculate the total price
     const orderDetails = await Promise.all(
       orders.map(async (order) => {
@@ -33,7 +28,7 @@ router.get("/orders", authMiddleware, async (req: Request, res: Response) => {
 
         // Fetch products by their IDs
         const products = await productRepository.findBy(
-           productIds.map((id) => ({ id }))
+          productIds.map((id) => ({ id }))
         );
 
         // Calculate the total price
@@ -46,17 +41,20 @@ router.get("/orders", authMiddleware, async (req: Request, res: Response) => {
         const orderDetail = {
           id: order.id,
           created_at: order.created_at,
+          customer_id: order.customer_id,
           products,
           total_price,
         };
         return orderDetail;
-
       })
     );
 
     res.status(200).json(orderDetails);
   } catch (error) {
-    console.error("Error fetching orders and product details from the database:", error);
+    console.error(
+      "Error fetching orders and product details from the database:",
+      error
+    );
     res.status(500).json({
       error: "Error fetching orders and product details from the database.",
     });
@@ -77,35 +75,35 @@ router.post(
   authMiddleware,
   async (req: Request, res: Response) => {
     const { products_id } = req.body;
-    const customer_id = Number(req.user?.id);
-
-    try {
+    const customer = req.user as User | undefined;
+    if (customer) {
       const order_object = new Order();
       order_object.products_id = products_id;
-      order_object.customer_id = customer_id;
+      order_object.customer_id = customer;
+      try {
+        // Check if all product IDs in the 'products_id' array exist in the products table
+        const validProducts = await productRepository
+          .createQueryBuilder("product")
+          .where("product.id = ANY(:productIds)", { productIds: products_id })
+          .select("product.id")
+          .getMany();
 
-      // Check if all product IDs in the 'products_id' array exist in the products table
-      const validProducts = await productRepository
-        .createQueryBuilder("product")
-        .where("product.id = ANY(:productIds)", { productIds: products_id })
-        .select("product.id")
-        .getMany();
+        if (validProducts.length !== products_id.length) {
+          // If the number of valid products found is not equal to the input length,
+          // it means there are invalid product IDs
+          return res
+            .status(400)
+            .json({ error: "Invalid product ID(s) in the products_id array." });
+        }
 
-      if (validProducts.length !== products_id.length) {
-        // If the number of valid products found is not equal to the input length,
-        // it means there are invalid product IDs
-        return res
-          .status(400)
-          .json({ error: "Invalid product ID(s) in the products_id array." });
+        const order = await AppDataSource.manager.save(order_object);
+        res.status(201).json(order);
+      } catch (error) {
+        console.error("Error inserting order into the database:", error);
+        res
+          .status(500)
+          .json({ error: "Error inserting order into the database." });
       }
-
-      const order = await AppDataSource.manager.save(order_object);
-      res.status(201).json(order);
-    } catch (error) {
-      console.error("Error inserting order into the database:", error);
-      res
-        .status(500)
-        .json({ error: "Error inserting order into the database." });
     }
   }
 );
@@ -119,13 +117,13 @@ router.get(
   "/order/:id",
   authMiddleware,
   async (req: Request, res: Response) => {
-    const customerId = Number(req.user?.id);
+    const customer = req.user as User | undefined;
     const id = parseInt(req.params?.id, 10);
 
     try {
       // Fetch orders for the authenticated customer by customer_id and order ID
       const orders = await orderRepository.find({
-        where: { customer_id: customerId, id: id },
+        where: { customer_id: customer, id: id },
       });
 
       // Fetch details of products for each order and calculate the total price
@@ -183,7 +181,7 @@ router.patch(
   async (req: Request, res: Response) => {
     const id = parseInt(req.params?.id, 10);
     const { products_id } = req.body;
-    const userId = Number(req.user?.id);
+    const userId = req.user;
 
     try {
       // Update the order with the specified ID and customer ID
@@ -219,7 +217,7 @@ router.delete(
   authMiddleware,
   async (req: Request, res: Response) => {
     const id = parseInt(req.params?.id, 10);
-    const userId = Number(req.user?.id);
+    const userId = req.user;
 
     try {
       // Delete the order with the specified ID and customer ID
