@@ -5,6 +5,7 @@ import orderRouter from "./routes/order";
 import customerRouter from "./routes/customer";
 import dotenv from "dotenv";
 import { AppDataSource } from "./db/dataSource";
+import { dbSeeder } from "./db/dbSeeder";
 
 // Load environment variables from .env file
 dotenv.config();
@@ -14,11 +15,15 @@ const app = express();
 
 // Initialize the data source (database connection)
 AppDataSource.initialize()
-  .then(() => {
+  .then( async () => {
     console.log("Data Source has been initialized!");
     // At this point, you can start working with your database
+    await dbSeeder();
+    console.log("Database has been seeded!");
+
   })
   .catch((error) => console.log(error));
+
 
 // Use body-parser middleware to handle JSON data
 app.use(bodyParser.json());
