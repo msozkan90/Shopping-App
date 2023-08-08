@@ -4,6 +4,7 @@ import { User } from "../entities/User";
 import { AppDataSource } from "../db/dataSource";
 
 const userRepository = AppDataSource.getRepository(User);
+
 // Interface for the authentication payload
 interface AuthPayload {
   id: number;
@@ -15,7 +16,6 @@ interface AuthPayload {
 }
 
 // Augmenting the Request type in Express to include the 'user' field.
-// This will allow us to access the authenticated user information later in the request handling process.
 declare global {
   namespace Express {
     interface Request {
@@ -40,23 +40,23 @@ export const permissionMiddleware = async (
   res: Response,
   next: NextFunction
 ) => {
-  // Get the 'Authorization' header from the request
-  const authHeader = req.header("Authorization");
-
-  // Check if the header exists and starts with 'Bearer '
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
-
-  // Extract the token from the header
-  const token = authHeader.slice(7);
-
-  // If token is not found
-  if (!token) {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
-
   try {
+    // Get the 'Authorization' header from the request
+    const authHeader = req.header("Authorization");
+
+    // Check if the header exists and starts with 'Bearer '
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    // Extract the token from the header
+    const token = authHeader.slice(7);
+
+    // If token is not found
+    if (!token) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
     // Verify the token using the JWT_SECRET and decode it as an AuthPayload
     const decodedToken = jwt.verify(
       token,
@@ -68,6 +68,7 @@ export const permissionMiddleware = async (
       id: Number(decodedToken.id),
     });
 
+    // If user not found
     if (!user) {
       return res.status(401).json({ message: "User not found" });
     }

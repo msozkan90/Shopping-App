@@ -181,26 +181,41 @@ router.patch(
   async (req: Request, res: Response) => {
     const id = parseInt(req.params?.id, 10);
     const { products_id } = req.body;
-    const userId = req.user;
+    const customer = req.user as User | undefined;
 
     try {
+      // Check if the products with the given IDs exist in the database
+      const existingProducts = await productRepository
+        .createQueryBuilder("product")
+        .where("product.id IN (:...ids)", { ids: products_id })
+        .getMany();
+      if (existingProducts.length !== products_id.length) {
+        return res.status(400).json({ error: "Some products do not exist" });
+      }
+
       // Update the order with the specified ID and customer ID
       const updatedOrder = await orderRepository
         .createQueryBuilder()
         .update(Order)
-        .set({ products_id })
+        .set({ products_id: products_id })
         .where("id = :id", { id })
-        .andWhere("customer_id = :userId", { userId })
+        .andWhere({ customer_id: customer })
         .returning("*")
         .execute();
 
       if (!updatedOrder.affected || updatedOrder.affected === 0) {
-        // If no rows were affected (order not found or not matching customer_id)
         return res.status(404).json({ error: "Order not found" });
       }
 
-      res.status(200).json(updatedOrder.raw);
+      // Return a success response with relevant information
+      res
+        .status(200)
+        .json({
+          message: "Order updated successfully",
+          order: updatedOrder.raw,
+        });
     } catch (error) {
+      console.error(error);
       res.status(500).json({ error: "Error updating order in the database." });
     }
   }
@@ -217,7 +232,7 @@ router.delete(
   authMiddleware,
   async (req: Request, res: Response) => {
     const id = parseInt(req.params?.id, 10);
-    const userId = req.user;
+    const customer = req.user as User | undefined;
 
     try {
       // Delete the order with the specified ID and customer ID
@@ -226,7 +241,7 @@ router.delete(
         .delete()
         .from(Order)
         .where("id = :id", { id })
-        .andWhere("customer_id = :userId", { userId })
+        .andWhere({ customer_id: customer })
         .returning("*")
         .execute();
 

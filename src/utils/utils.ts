@@ -1,7 +1,13 @@
+/**
+ * getRandomInteger function
+ * Generates a random integer between 1 and 10 (inclusive).
+ *
+ * @returns {number} - Random integer between 1 and 10.
+ */
 export const getRandomInteger = () => {
-    // Math.random() fonksiyonu 0 ile 1 arasında rastgele bir sayı üretir (1 dahil değil).
-    // Bu yüzden 1 ile 11 arasında (1 ve 11 dahil) bir sayı elde etmek için aşağıdaki işlemler yapılır.
+    // Math.random() generates a random number between 0 (inclusive) and 1 (exclusive).
+    // To get a random integer between 1 and 10 (inclusive), the following operations are performed.
+    // Math.floor rounds down to the nearest integer.
     var randomNumber = Math.floor(Math.random() * 10) + 1;
     return randomNumber;
-}
-
+  };
