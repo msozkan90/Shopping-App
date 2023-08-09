@@ -26,7 +26,7 @@ docker-compose -f docker-compose.yml up -d --build
 ```
 - After finish your project will be ready to use and dbseeder create example data in your database.
 ## Usage
-- Login to your postman account and import postman collection file that you download in project repository file
+- Login to your postman account and import postman collection file that you downloaded in project repository file
 
 - After login you can use example user accounts
 ```python
@@ -65,3 +65,15 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiZW1haWwiOiJub3JtYWxAZXhhbXBsZS5
 - You can make every request with admin user token.
 - You can make every request with normal user token except manage product (create, update, delete)
 - You can not add new admin user but if you want you can add normal user
+
+### Design and Logic
+- Authorization system (admin, client)
+- Database relationships ( user <--> order, product <--> order )
+- Node JS and Database management with docker
+- Request validation for get clean user informations
+- TypeORM library for SQL managements
+- Bearer Token for Auth security
+- Meaningful exceptions and Structured response
+- Logical logs for users
+- Clean code and code explanaiton
+- Easy test with postman collection
